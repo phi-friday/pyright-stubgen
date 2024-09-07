@@ -91,23 +91,18 @@ async def run_pyright_stubgen(name: str, **naive_options: Unpack[Options]) -> No
         target = await queue.get()
         await _rm_empty_directory(target)
 
-    _run_pyright_stubgen_outdir(root, package, name, options)
+    _run_pyright_stubgen_outdir(package, options)
 
 
-def _run_pyright_stubgen_outdir(
-    root: Path[str], package: str, name: str, options: Options | StrictOptions
-) -> None:
+def _run_pyright_stubgen_outdir(package: str, options: Options | StrictOptions) -> None:
     options = _ensure_options(options)
     if options["out_dir"] == _PYRIGHT_DEFAULT_OUTPUT:
         return
 
-    origin_dir = (
-        _PYRIGHT_DEFAULT_OUTPUT / root.name
-        if package == name
-        else _PYRIGHT_DEFAULT_OUTPUT / package
-    )
+    origin_dir = _PYRIGHT_DEFAULT_OUTPUT / package
     out_dir = options["out_dir"]
-    target_dir = out_dir / root.name
+    target_dir = out_dir / package
+    origin_dir, target_dir = origin_dir.resolve(), target_dir.resolve()
 
     temp_dir: Path[str] | None = None
     if target_dir.exists():
@@ -120,12 +115,12 @@ def _run_pyright_stubgen_outdir(
     except:
         if target_dir.exists():
             shutil.rmtree(target_dir)
-        raise
-    finally:
-        if target_dir.exists():
-            shutil.rmtree(target_dir)
         if temp_dir and temp_dir.exists():
             shutil.move(temp_dir, target_dir)
+        raise
+    finally:
+        if temp_dir and temp_dir.exists():
+            shutil.rmtree(temp_dir)
 
 
 async def _run_pyright_stubgen(
