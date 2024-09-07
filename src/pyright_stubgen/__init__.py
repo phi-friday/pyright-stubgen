@@ -15,7 +15,7 @@ def main() -> None:
     from pyright_stubgen.stubgen import run_pyright_stubgen
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-m", type=str, help="module name", required=True)
+    parser.add_argument("-m", "--module", type=str, help="module name", required=True)
     parser.add_argument("-v", "--verbose", action="store_true", help="verbose")
     parser.add_argument("--ignore-error", action="store_true", help="ignore error")
     parser.add_argument("--concurrency", type=int, default=5, help="concurrency")
