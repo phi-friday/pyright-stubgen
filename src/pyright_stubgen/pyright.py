@@ -29,7 +29,7 @@ class Options(TypedDict, total=False):
     ignore_error: bool
     verbose: bool
     concurrency: int | anyio.Semaphore
-    out_dir: str | PathLike[str] | None
+    out_dir: str | PathLike[str]
 
 
 class StrictOptions(TypedDict, total=True):
