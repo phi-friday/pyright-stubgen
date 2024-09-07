@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import shutil
 import subprocess
 import sys
 from asyncio import Queue
@@ -28,12 +29,14 @@ class Options(TypedDict, total=False):
     ignore_error: bool
     verbose: bool
     concurrency: int | anyio.Semaphore
+    out_dir: str | PathLike[str] | None
 
 
 class StrictOptions(TypedDict, total=True):
     ignore_error: bool
     verbose: bool
     concurrency: anyio.Semaphore
+    out_dir: Path[str]
 
 
 def _ensure_options(**naive_options: Unpack[Options]) -> StrictOptions:
@@ -43,11 +46,15 @@ def _ensure_options(**naive_options: Unpack[Options]) -> StrictOptions:
         ("ignore_error", False),
         ("verbose", False),
         ("concurrency", 5),
+        ("out_dir", _OUTPUT),
     ]:
         result.setdefault(key, default)
 
     if isinstance(result["concurrency"], int):
         result["concurrency"] = anyio.Semaphore(result["concurrency"])
+    if result["out_dir"] is None:
+        result["out_dir"] = _OUTPUT
+    result["out_dir"] = Path(result["out_dir"])
 
     return cast(StrictOptions, result)
 
@@ -75,6 +82,12 @@ async def run_pyright_stubgen(name: str, **naive_options: Unpack[Options]) -> No
     while not queue.empty():
         target = await queue.get()
         await _rm_empty_directory(target)
+
+    if options["out_dir"] != _OUTPUT:
+        origin_dir = _OUTPUT / root.name
+        target_dir = options["out_dir"] / root.name
+        target_dir.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(origin_dir, target_dir)
 
 
 async def _run_pyright_stubgen(

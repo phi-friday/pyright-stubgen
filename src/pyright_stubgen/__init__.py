@@ -19,15 +19,17 @@ def main() -> None:
     parser.add_argument("-v", "--verbose", action="store_true", help="verbose")
     parser.add_argument("--ignore-error", action="store_true", help="ignore error")
     parser.add_argument("--concurrency", type=int, default=5, help="concurrency")
+    parser.add_argument("--out", type=str, default=None, help="output directory")
 
     args = parser.parse_args()
 
     stubgen = partial(
         run_pyright_stubgen,
-        args.m,
+        args.module,
         verbose=args.verbose,
         ignore_error=args.ignore_error,
         concurrency=args.concurrency,
+        out_dir=args.out,
     )
     anyio.run(stubgen)
 
