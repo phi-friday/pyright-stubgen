@@ -12,9 +12,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
 import anyio
-from typing_extensions import TypedDict, Unpack
+from typing_extensions import Required, TypedDict
 
 if TYPE_CHECKING:
+    from argparse import Namespace
     from os import PathLike
 
 
@@ -40,6 +41,7 @@ class Options(TypedDict, total=False):
     verbose: bool
     concurrency: int | anyio.Semaphore
     out_dir: str | PathLike[str]
+    args: Required[Namespace]
 
 
 class StrictOptions(TypedDict, total=True):
@@ -47,6 +49,9 @@ class StrictOptions(TypedDict, total=True):
     verbose: bool
     concurrency: anyio.Semaphore
     out_dir: Path[str]
+    args: Namespace
+    ##
+    _strict_options_: bool
 
 
 def _ensure_options(
@@ -75,9 +80,7 @@ def _ensure_options(
     return cast(StrictOptions, result)
 
 
-async def run_stubgen(
-    name: str, *, config: Config, **naive_options: Unpack[Options]
-) -> None:
+async def run_stubgen(name: str, *, config: Config, naive_options: Options) -> None:
     options = _ensure_options(naive_options, config=config)
     package = name.split(".", 1)[0] if "." in name else name
     spec = find_spec(name, package)

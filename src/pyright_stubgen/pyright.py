@@ -6,7 +6,7 @@ from pathlib import Path
 
 import anyio
 
-from pyright_stubgen.base import Config, StrictOptions, run_stubgen
+from pyright_stubgen.base import Config, Options, StrictOptions, run_stubgen
 
 __all__ = []
 
@@ -36,14 +36,15 @@ def main() -> None:
     parser.add_argument("--out", type=str, default="out", help="output directory")
 
     args = parser.parse_args()
+    options: Options = {
+        "ignore_error": args.ignore_error,
+        "verbose": args.verbose,
+        "concurrency": args.concurrency,
+        "out_dir": args.out,
+        "args": args,
+    }
 
     stubgen = partial(
-        run_stubgen,
-        args.module,
-        config=_PYRIGHT_CONFIG,
-        verbose=args.verbose,
-        ignore_error=args.ignore_error,
-        concurrency=args.concurrency,
-        out_dir=args.out,
+        run_stubgen, args.module, config=_PYRIGHT_CONFIG, naive_options=options
     )
     anyio.run(stubgen)
