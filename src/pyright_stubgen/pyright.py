@@ -88,7 +88,7 @@ async def run_pyright_stubgen(name: str, **naive_options: Unpack[Options]) -> No
         await _rm_empty_directory(target)
 
     if options["out_dir"] != _OUTPUT:
-        origin_dir = _OUTPUT / root.name
+        origin_dir = _OUTPUT / root.name if package == name else _OUTPUT / package
         target_dir = options["out_dir"] / root.name
         target_dir.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(origin_dir, target_dir)

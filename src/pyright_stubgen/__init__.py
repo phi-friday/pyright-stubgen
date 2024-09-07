@@ -12,7 +12,7 @@ def main() -> None:
 
     import anyio
 
-    from pyright_stubgen.stubgen import run_pyright_stubgen
+    from pyright_stubgen.pyright import run_pyright_stubgen
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--module", type=str, help="module name", required=True)
