@@ -2,7 +2,7 @@
 ## how to use
 ```bash
 ❯ uv run stubgen --help
-usage: stubgen [-h] -m MODULE [-v] [--ignore-error] [--concurrency CONCURRENCY]
+usage: stubgen [-h] -m MODULE [-v] [--ignore-error] [--concurrency CONCURRENCY] [--out OUT]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -12,4 +12,5 @@ optional arguments:
   --ignore-error        ignore error
   --concurrency CONCURRENCY
                         concurrency
+  --out OUT             output directory
 ```
