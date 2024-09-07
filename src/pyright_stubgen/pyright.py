@@ -39,7 +39,10 @@ class StrictOptions(TypedDict, total=True):
     out_dir: Path[str]
 
 
-def _ensure_options(**naive_options: Unpack[Options]) -> StrictOptions:
+def _ensure_options(naive_options: Options | StrictOptions) -> StrictOptions:
+    if naive_options.get("_strict_options_", False) is True:
+        return cast(StrictOptions, naive_options)
+
     result: dict[str, Any] = dict(naive_options)
 
     for key, default in [
@@ -56,12 +59,13 @@ def _ensure_options(**naive_options: Unpack[Options]) -> StrictOptions:
         result["out_dir"] = _OUTPUT
     result["out_dir"] = Path(result["out_dir"])
 
+    result["_strict_options_"] = True
     return cast(StrictOptions, result)
 
 
 async def run_pyright_stubgen(name: str, **naive_options: Unpack[Options]) -> None:
     """generate stubs using pyright"""
-    options = _ensure_options(**naive_options)
+    options = _ensure_options(naive_options)
     package = name.split(".", 1)[0] if "." in name else name
     spec = find_spec(name, package)
 
@@ -72,9 +76,9 @@ async def run_pyright_stubgen(name: str, **naive_options: Unpack[Options]) -> No
     root = Path(spec.origin)
     if root.name == "__init__.py":
         root = root.parent
-    await _run_pyright_stubgen_process(name, **options)
+    await _run_pyright_stubgen_process(name, options)
 
-    stubgen = partial(_run_pyright_stubgen, **options)
+    stubgen = partial(_run_pyright_stubgen, options=options)
     queue: Queue[anyio.Path] = Queue()
 
     async with anyio.create_task_group() as task_group:
@@ -98,9 +102,9 @@ async def _run_pyright_stubgen(
     path: str | PathLike[str],
     root: str | PathLike[str],
     queue: Queue[anyio.Path],
-    **naive_options: Unpack[Options],
+    options: Options | StrictOptions,
 ) -> None:
-    options = _ensure_options(**naive_options)
+    options = _ensure_options(options)
 
     apath, aroot = anyio.Path(path), anyio.Path(root)
     apath, aroot = await apath.resolve(), await aroot.resolve()
@@ -115,13 +119,13 @@ async def _run_pyright_stubgen(
         return
     module = _path_to_module(path, root)
 
-    await _run_pyright_stubgen_process(module, **options)
+    await _run_pyright_stubgen_process(module, options)
 
 
 async def _run_pyright_stubgen_process(
-    module: str, **naive_options: Unpack[Options]
+    module: str, options: Options | StrictOptions
 ) -> None:
-    options = _ensure_options(**naive_options)
+    options = _ensure_options(options)
     command = _create_stub_command(module, verbose=options["verbose"])
 
     async with options["concurrency"]:
