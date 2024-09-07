@@ -94,14 +94,14 @@ async def run_stubgen(name: str, *, config: Config, naive_options: Options) -> N
         root = root.parent
     await _run_stubgen_process(name, options, config)
 
-    stubgen = partial(_run_stubgen, options=options)
+    stubgen = partial(_run_stubgen, options=options, config=config)
     queue: Queue[anyio.Path] = Queue()
 
     async with anyio.create_task_group() as task_group:
         for path in root.glob("**/*.py"):
-            task_group.start_soon(stubgen, path, root, queue, config)
+            task_group.start_soon(stubgen, path, root, queue)
         for path in root.glob("**/*.pyi"):
-            task_group.start_soon(stubgen, path, root, queue, config)
+            task_group.start_soon(stubgen, path, root, queue)
 
     while not queue.empty():
         target = await queue.get()

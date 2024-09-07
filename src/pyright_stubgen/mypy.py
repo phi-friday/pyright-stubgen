@@ -27,9 +27,9 @@ def _create_stub_command(module: str, *, options: StrictOptions) -> list[str]:
         command.append("--no-analysis")
     if args.inspect_mode:
         command.append("--inspect-mode")
-    if not args.include_private:
+    if args.include_private:
         command.append("--include-private")
-    if not args.include_docstrings:
+    if args.include_docstrings:
         command.append("--include-docstrings")
     if options["verbose"]:
         command.append("--verbose")
@@ -44,12 +44,12 @@ _MYPY_CONFIG = Config(
 def main() -> None:
     parser = create_default_parser()
     parser.add_argument("--no-analysis", action="store_true", help="no analysis")
-    parser.add_argument("--inspect-mode", action="store_true", help="inspect mode")
+    parser.add_argument("--inspect-mode", action="store_false", help="inspect mode")
     parser.add_argument(
-        "--include-private", action="store_false", help="include private"
+        "--include-private", action="store_true", help="include private"
     )
     parser.add_argument(
-        "--include-docstrings", action="store_false", help="include docstrings"
+        "--include-docstrings", action="store_true", help="include docstrings"
     )
 
     args = parser.parse_args()
