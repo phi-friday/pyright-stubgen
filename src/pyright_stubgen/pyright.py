@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
 __all__ = ["run_pyright_stubgen"]
 
-_OUTPUT = Path("typings")
+_PYRIGHT_DEFAULT_OUTPUT = Path("typings")
 logger = logging.getLogger("pyright_stubgen")
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler(sys.stdout))
@@ -49,14 +49,14 @@ def _ensure_options(naive_options: Options | StrictOptions) -> StrictOptions:
         ("ignore_error", False),
         ("verbose", False),
         ("concurrency", 5),
-        ("out_dir", _OUTPUT),
+        ("out_dir", _PYRIGHT_DEFAULT_OUTPUT),
     ]:
         result.setdefault(key, default)
 
     if isinstance(result["concurrency"], int):
         result["concurrency"] = anyio.Semaphore(result["concurrency"])
     if result["out_dir"] is None:
-        result["out_dir"] = _OUTPUT
+        result["out_dir"] = _PYRIGHT_DEFAULT_OUTPUT
     result["out_dir"] = Path(result["out_dir"])
 
     result["_strict_options_"] = True
@@ -91,11 +91,41 @@ async def run_pyright_stubgen(name: str, **naive_options: Unpack[Options]) -> No
         target = await queue.get()
         await _rm_empty_directory(target)
 
-    if options["out_dir"] != _OUTPUT:
-        origin_dir = _OUTPUT / root.name if package == name else _OUTPUT / package
-        target_dir = options["out_dir"] / root.name
+    _run_pyright_stubgen_outdir(root, package, name, options)
+
+
+def _run_pyright_stubgen_outdir(
+    root: Path[str], package: str, name: str, options: Options | StrictOptions
+) -> None:
+    options = _ensure_options(options)
+    if options["out_dir"] == _PYRIGHT_DEFAULT_OUTPUT:
+        return
+
+    origin_dir = (
+        _PYRIGHT_DEFAULT_OUTPUT / root.name
+        if package == name
+        else _PYRIGHT_DEFAULT_OUTPUT / package
+    )
+    out_dir = options["out_dir"]
+    target_dir = out_dir / root.name
+
+    temp_dir: Path[str] | None = None
+    if target_dir.exists():
+        temp_dir = target_dir.with_suffix(".bak")
+        shutil.move(target_dir, temp_dir)
+
+    try:
         target_dir.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(origin_dir, target_dir)
+    except:
+        if target_dir.exists():
+            shutil.rmtree(target_dir)
+        raise
+    finally:
+        if target_dir.exists():
+            shutil.rmtree(target_dir)
+        if temp_dir and temp_dir.exists():
+            shutil.move(temp_dir, target_dir)
 
 
 async def _run_pyright_stubgen(
@@ -109,7 +139,7 @@ async def _run_pyright_stubgen(
     apath, aroot = anyio.Path(path), anyio.Path(root)
     apath, aroot = await apath.resolve(), await aroot.resolve()
 
-    target = anyio.Path(_OUTPUT) / apath.relative_to(aroot.parent)
+    target = anyio.Path(_PYRIGHT_DEFAULT_OUTPUT) / apath.relative_to(aroot.parent)
     target = target.with_name(target.stem)
     await queue.put(target)
 
