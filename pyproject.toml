@@ -1,8 +1,19 @@
 [project]
 name = "pyright-stubgen"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.0.0"
+description = "stubgen using pyright"
 readme = "README.md"
+license = { file = "LICENSE" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Framework :: AsyncIO",
+]
 requires-python = ">=3.9"
 dependencies = [
     "anyio>=4",
