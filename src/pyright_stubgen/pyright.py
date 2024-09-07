@@ -172,3 +172,26 @@ async def _rm_empty_directory(target: anyio.Path) -> None:
 
     logger.info("Incorretly generated stubs found, removing directory %s", target)
     await target.rmdir()
+
+
+def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-m", "--module", type=str, help="module name", required=True)
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose")
+    parser.add_argument("--ignore-error", action="store_true", help="ignore error")
+    parser.add_argument("--concurrency", type=int, default=5, help="concurrency")
+    parser.add_argument("--out", type=str, default="out", help="output directory")
+
+    args = parser.parse_args()
+
+    stubgen = partial(
+        run_pyright_stubgen,
+        args.module,
+        verbose=args.verbose,
+        ignore_error=args.ignore_error,
+        concurrency=args.concurrency,
+        out_dir=args.out,
+    )
+    anyio.run(stubgen)
