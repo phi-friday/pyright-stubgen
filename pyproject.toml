@@ -24,6 +24,7 @@ dependencies = [
 ]
 [project.scripts]
 pyright-stubgen = "pyright_stubgen.pyright:main"
+mypy-stubgen = "pyright_stubgen.mypy:main"
 
 [tool.uv]
 dev-dependencies = [
