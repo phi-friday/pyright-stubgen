@@ -62,12 +62,16 @@ def _ensure_options(**naive_options: Unpack[Options]) -> StrictOptions:
 async def run_pyright_stubgen(name: str, **naive_options: Unpack[Options]) -> None:
     """generate stubs using pyright"""
     options = _ensure_options(**naive_options)
-    spec = find_spec(name)
-    if spec is None or not spec.submodule_search_locations:
+    package = name.split(".", 1)[0] if "." in name else name
+    spec = find_spec(name, package)
+
+    if spec is None or not spec.origin:
         error_msg = f"Module '{name}' not found"
         raise ModuleNotFoundError(error_msg)
 
-    root = Path(spec.submodule_search_locations[0])
+    root = Path(spec.origin)
+    if root.name == "__init__.py":
+        root = root.parent
     await _run_pyright_stubgen_process(name, **options)
 
     stubgen = partial(_run_pyright_stubgen, **options)
