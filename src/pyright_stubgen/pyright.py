@@ -6,7 +6,13 @@ from pathlib import Path
 
 import anyio
 
-from pyright_stubgen.base import Config, Options, StrictOptions, run_stubgen
+from pyright_stubgen.base import (
+    Config,
+    StrictOptions,
+    create_default_parser,
+    create_options_from_parser,
+    run_stubgen,
+)
 
 __all__ = []
 
@@ -26,24 +32,10 @@ _PYRIGHT_CONFIG = Config(
 
 
 def main() -> None:
-    import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-m", "--module", type=str, help="module name", required=True)
-    parser.add_argument("-v", "--verbose", action="store_true", help="verbose")
-    parser.add_argument("--ignore-error", action="store_true", help="ignore error")
-    parser.add_argument("--concurrency", type=int, default=5, help="concurrency")
-    parser.add_argument("--out", type=str, default="out", help="output directory")
+    parser = create_default_parser()
 
     args = parser.parse_args()
-    options: Options = {
-        "ignore_error": args.ignore_error,
-        "verbose": args.verbose,
-        "concurrency": args.concurrency,
-        "out_dir": args.out,
-        "args": args,
-    }
-
+    options = create_options_from_parser(args)
     stubgen = partial(
         run_stubgen, args.module, config=_PYRIGHT_CONFIG, naive_options=options
     )

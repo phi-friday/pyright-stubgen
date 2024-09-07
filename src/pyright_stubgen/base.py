@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import logging
 import shutil
 import subprocess
@@ -15,7 +16,6 @@ import anyio
 from typing_extensions import Required, TypedDict
 
 if TYPE_CHECKING:
-    from argparse import Namespace
     from os import PathLike
 
 
@@ -41,7 +41,7 @@ class Options(TypedDict, total=False):
     verbose: bool
     concurrency: int | anyio.Semaphore
     out_dir: str | PathLike[str]
-    args: Required[Namespace]
+    args: Required[argparse.Namespace]
 
 
 class StrictOptions(TypedDict, total=True):
@@ -49,7 +49,7 @@ class StrictOptions(TypedDict, total=True):
     verbose: bool
     concurrency: anyio.Semaphore
     out_dir: Path[str]
-    args: Namespace
+    args: argparse.Namespace
     ##
     _strict_options_: bool
 
@@ -209,3 +209,24 @@ async def _rm_empty_directory(target: anyio.Path) -> None:
 
     logger.info("Incorretly generated stubs found, removing directory %s", target)
     await target.rmdir()
+
+
+def create_default_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-m", "--module", type=str, help="module name", required=True)
+    parser.add_argument("-v", "--verbose", action="store_true", help="verbose")
+    parser.add_argument("--ignore-error", action="store_true", help="ignore error")
+    parser.add_argument("--concurrency", type=int, default=5, help="concurrency")
+    parser.add_argument("--out", type=str, default="out", help="output directory")
+
+    return parser
+
+
+def create_options_from_parser(args: argparse.Namespace) -> Options:
+    return {
+        "ignore_error": args.ignore_error,
+        "verbose": args.verbose,
+        "concurrency": args.concurrency,
+        "out_dir": args.out,
+        "args": args,
+    }
