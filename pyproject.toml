@@ -10,7 +10,7 @@ dependencies = [
     "typing-extensions",
 ]
 [project.scripts]
-stubgen = "pyright_stubgen:main"
+pyright-stubgen = "pyright_stubgen:main"
 
 [tool.uv]
 dev-dependencies = [

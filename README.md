@@ -1,8 +1,8 @@
 # pyright-stubgen
 ## how to use
 ```bash
-❯ uv run stubgen --help
-usage: stubgen [-h] -m MODULE [-v] [--ignore-error] [--concurrency CONCURRENCY] [--out OUT]
+❯ uv run pyright-stubgen --help
+usage: pyright-stubgen [-h] -m MODULE [-v] [--ignore-error] [--concurrency CONCURRENCY] [--out OUT]
 
 optional arguments:
   -h, --help            show this help message and exit
